@@ -47,6 +47,7 @@ import java.util.UUID;
 
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.OnDatapackSyncEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.network.event.RegisterConfigurationTasksEvent;
 
@@ -119,8 +120,20 @@ public class NeoForgeConnectionListener extends AbstractConnectionListener {
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
-    public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
-        ServerPlayer player = (ServerPlayer) event.getEntity();
+    public void onPlayerLoggedIn(OnDatapackSyncEvent event) {
+        // 3TUSK: Abuse this event to initialise UserAttachmentImpl before PermissionAPI is firstly queried
+        //        i.e. before PlayerList#sendPlayerPermissionLevel is called.
+        //        NeoForge will also fire this event before PlayerList add the new player into PlayerList.
+        //        Using PlayerLoggedInEvent is too late because PlayerList#sendPlayerPermissionLevel will call
+        //        Commands#sendCommands, and some commands will use NeoForge Permission API to check permission.
+        //        That way, any mods that uses PermissionAPI will cause LuckPerms calling UserAttachmentImpl#assertInitialised
+        //        way too early, and blocking users from joining server.
+        //        I haven't decided on a proper fix yet. Given its nature, we might want to patch LuckPerm's
+        //        NeoForgePermissionHandler.getPermission so it can handle the premature permission query.
+        ServerPlayer player = event.getPlayer();
+        if (player == null || event.getPlayerList().getPlayer(player.getGameProfile().getId()) == null) {
+            return;
+        }
         GameProfile profile = player.getGameProfile();
 
         if (this.plugin.getConfiguration().get(ConfigKeys.DEBUG_LOGINS)) {
