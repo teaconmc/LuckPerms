@@ -53,7 +53,7 @@ subprojects {
 
     project.ext.majorVersion = '5'
     project.ext.minorVersion = '4'
-    project.ext.patchVersion = determinePatchVersion()
+    project.ext.patchVersion = '0' //determinePatchVersion()
     project.ext.apiVersion = project.ext.majorVersion + '.' + project.ext.minorVersion
     project.ext.fullVersion = project.ext.apiVersion + '.' + project.ext.patchVersion
 

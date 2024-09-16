@@ -1,4 +1,4 @@
-name: release
+name: Custom Build & Release
 on:
   workflow_dispatch:
 jobs:
