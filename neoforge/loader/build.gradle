@@ -57,9 +57,8 @@ build {
 jar {
     manifest {
         attributes(
-                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
                 'Implementation-Title': 'LuckPerms',
-                'Implementation-Vendor': 'LuckPerms',
+                'Implementation-Vendor': 'TeaConMC',
                 'Implementation-Version': project.ext.fullVersion,
                 'Specification-Title': 'luckperms',
                 'Specification-Vendor': 'LuckPerms',
@@ -90,4 +89,30 @@ shadowJar {
 
 artifacts {
     archives shadowJar
+}
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = "org.teacon"
+            artifactId = "LuckPerms-NeoForge-1.21"
+
+            artifact shadowJar
+            pom {
+                name = 'LuckPerms (TeaCon fork) for Minecraft 1.21'
+                description = 'A permissions plugin for Minecraft servers by lucko and contributors. Forked by TeaConMC while waiting for upstream to fix some issue...'
+                url = 'https://github.com/teaconmc/luckperms'
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "teacon"
+            url = "s3://maven/"
+            credentials(AwsCredentials) {
+                accessKey = System.env.ARCHIVE_ACCESS_KEY
+                secretKey = System.env.ARCHIVE_SECRET_KEY
+            }
+        }
+    }
 }
