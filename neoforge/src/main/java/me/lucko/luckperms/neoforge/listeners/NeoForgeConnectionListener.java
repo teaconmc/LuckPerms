@@ -131,7 +131,7 @@ public class NeoForgeConnectionListener extends AbstractConnectionListener {
         //        I haven't decided on a proper fix yet. Given its nature, we might want to patch LuckPerm's
         //        NeoForgePermissionHandler.getPermission so it can handle the premature permission query.
         ServerPlayer player = event.getPlayer();
-        if (player == null || event.getPlayerList().getPlayer(player.getGameProfile().getId()) == null) {
+        if (player == null || event.getPlayerList().getPlayer(player.getGameProfile().getId()) != null) {
             return;
         }
         GameProfile profile = player.getGameProfile();
