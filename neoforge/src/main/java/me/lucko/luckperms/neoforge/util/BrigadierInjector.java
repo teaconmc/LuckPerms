@@ -34,6 +34,7 @@ import me.lucko.luckperms.common.model.User;
 import me.lucko.luckperms.neoforge.LPNeoForgePlugin;
 import me.lucko.luckperms.neoforge.attachments.UserAttachment;
 import me.lucko.luckperms.neoforge.attachments.UserAttachmentImpl;
+import net.luckperms.api.query.QueryOptions;
 import net.luckperms.api.util.Tristate;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
@@ -150,7 +151,20 @@ public final class BrigadierInjector {
                         // Should never happen but just in case...
                         return false;
                     }
-                    state = user.getCachedData().getPermissionData().checkPermission(permission);
+                    // 3TUSK: During player respawn, the player instance we have here is NOT in the PlayerList.
+                    //        PlayerList still holds the reference to deceased player, whose data were invalidated
+                    //        by use in UserAttachmentListener.
+                    //        If we query PlayerList by UUID, we will ends up with `null` QueryOptionCache<ServerPlayer>,
+                    //        leading to NullPointerException.
+                    //        To solve this, we bypass all the abstraction layer and get the correct QueryOptionCache
+                    //        from newly cloned player, falling back to static query options if not available (which is
+                    //        impossible, by the way).
+                    //        Doing so we avoid querying to deceased player and causing NPE.
+                    QueryOptions newQueryOptions = UserAttachmentImpl.get(player).getQueryOptionsCache().getQueryOptions();
+                    if (newQueryOptions == null) {
+                        newQueryOptions = user.getPlugin().getContextManager().getStaticQueryOptions();
+                    }
+                    state = user.getCachedData().getPermissionData(newQueryOptions).checkPermission(permission);
                 } else {
                     UserAttachment user = UserAttachmentImpl.get(player);
                     state = user.checkPermission(this.permission);
